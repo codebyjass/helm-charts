@@ -116,18 +116,64 @@ spec:
               value: /etc/temporal/config/config_template.yaml
             {{- end }}
             {{- if ne (include "temporal.persistence.driver" (list $ "default")) "custom" }}
+            {{- $storeConfig := index $.Values.server.config.persistence "default" }}
+            {{- $driver := include "temporal.persistence.driver" (list $ "default") }}
+            {{- if eq $driver "sql" }}
+            {{- $driverConfig := index $storeConfig "sql" }}
+            {{- if $driverConfig.host }}
+            - name: TEMPORAL_STORE_HOST
+              value: {{ $driverConfig.host | quote }}
+            {{- end }}
+            {{- if $driverConfig.port }}
+            - name: TEMPORAL_STORE_PORT
+              value: {{ $driverConfig.port | quote }}
+            {{- end }}
+            {{- if $driverConfig.user }}
+            - name: TEMPORAL_STORE_USER
+              value: {{ $driverConfig.user | quote }}
+            {{- end }}
+            {{- if $driverConfig.database }}
+            - name: TEMPORAL_STORE_DATABASE
+              value: {{ $driverConfig.database | quote }}
+            {{- end }}
+            {{- end }}
+            {{- if ne $driver "custom" }}
             - name: TEMPORAL_STORE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ "default") }}
                   key: {{ include "temporal.persistence.secretKey" (list $ "default") }}
             {{- end }}
+            {{- end }}
             {{- if ne (include "temporal.persistence.driver" (list $ "visibility")) "custom" }}
+            {{- $storeConfig := index $.Values.server.config.persistence "visibility" }}
+            {{- $driver := include "temporal.persistence.driver" (list $ "visibility") }}
+            {{- if eq $driver "sql" }}
+            {{- $driverConfig := index $storeConfig "sql" }}
+            {{- if $driverConfig.host }}
+            - name: TEMPORAL_VISIBILITY_STORE_HOST
+              value: {{ $driverConfig.host | quote }}
+            {{- end }}
+            {{- if $driverConfig.port }}
+            - name: TEMPORAL_VISIBILITY_STORE_PORT
+              value: {{ $driverConfig.port | quote }}
+            {{- end }}
+            {{- if $driverConfig.user }}
+            - name: TEMPORAL_VISIBILITY_STORE_USER
+              value: {{ $driverConfig.user | quote }}
+            {{- end }}
+            {{- if $driverConfig.database }}
+            - name: TEMPORAL_VISIBILITY_STORE_DATABASE
+              value: {{ $driverConfig.database | quote }}
+            {{- end }}
+            {{- end }}
+            {{- if ne $driver "custom" }}
             - name: TEMPORAL_VISIBILITY_STORE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "temporal.persistence.secretName" (list $ "visibility") }}
                   key: {{ include "temporal.persistence.secretKey" (list $ "visibility") }}
+            {{- end }}
             {{- end }}
           {{- if and (hasKey $.Values.server "internalFrontend") $.Values.server.internalFrontend.enabled }}
             - name: USE_INTERNAL_FRONTEND
